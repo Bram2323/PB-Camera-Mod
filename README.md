@@ -2,7 +2,7 @@
 
 What it does: It adds more camera controls
 
-Game Version: 1.24+Mod Version: 1.1.0
+Game Version: 1.24+
 
 Dependencies: PolyTech Framework 0.7.
 
