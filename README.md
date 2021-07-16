@@ -2,11 +2,11 @@
 
 What it does: It adds more camera controls
 
-Game Version: 1.24+
+Game Version: 1.28+
 
-Dependencies: PolyTech Framework 0.7.
+Dependencies: PolyTech Framework 0.9.5
 
-To install: Place this .dll in the ...\Poly Bridge 2\BepInEx\plugins folder
+To install: Place this .dll in the "...\Poly Bridge 2\BepInEx\plugins" folder
 
 
 # Settings:
@@ -32,3 +32,7 @@ Auto Offset: Automaticaly add a offset based on the target vehicle type
 Offset: A offset thats added to the 0 0 point off the car when using first person view
 
 Change Target: The button that will change the target
+
+Change Projection: The button that changes the camara projection type
+
+Field of View: The vield of view when using perspective projection type

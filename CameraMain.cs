@@ -21,7 +21,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.1.1";
+        public const string pluginVerson = "1.2.1";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
@@ -35,6 +35,8 @@ namespace CameraMod
         public ConfigDefinition AutoOffsetDef = new ConfigDefinition(pluginName, "Auto Offset");
         public ConfigDefinition OffsetDef = new ConfigDefinition(pluginName, "Offset");
         public ConfigDefinition ChangeTargetDef = new ConfigDefinition(pluginName, "Change Target");
+        public ConfigDefinition ChangePerspectiveDef = new ConfigDefinition(pluginName, "Change Projection");
+        public ConfigDefinition FieldOfViewDef = new ConfigDefinition(pluginName, "Vield of View");
 
         public ConfigEntry<bool> mEnabled;
 
@@ -58,8 +60,10 @@ namespace CameraMod
 
         public ConfigEntry<KeyboardShortcut> mChangeTarget;
 
+        public ConfigEntry<KeyboardShortcut> mChangePerspective;
 
-        public bool backgroundEnabled;
+        public ConfigEntry<float> mFieldOfView;
+
 
         public bool ReCalcCamPos;
 
@@ -71,13 +75,16 @@ namespace CameraMod
         public int CamIndex = 0;
         public int LastCamIndex = 0;
         public Vehicle CamTarget;
-        public bool IsPressed = false;
 
+        public GameObject FollowCamObjMain;
         public GameObject FollowCamObj;
         public GameObject ReplayFollowCamObj;
-        public GameObject FollowCamObjMain;
+        public GameObject PerspectiveCamObj;
+        public GameObject ReplayPerspectiveCamObj;
         public Camera FollowCam;
         public Camera ReplayFollowCam;
+        public Camera PerspectiveCam;
+        public Camera ReplayPerspectiveCam;
 
         public Camera ReplayCam;
 
@@ -88,64 +95,66 @@ namespace CameraMod
         void Awake()
         {
             if (instance == null) instance = this;
+            authors = new string[] { "Bram2323" };
 
             FollowCamObjMain = Instantiate(new GameObject("FollowCameraMain"));
             FollowCamObj = Instantiate(new GameObject("FollowCamera"), FollowCamObjMain.transform);
             FollowCam = FollowCamObj.AddComponent<Camera>();
             ReplayFollowCamObj = Instantiate(new GameObject("ReplayFollowCamera"), FollowCamObj.transform);
             ReplayFollowCam = ReplayFollowCamObj.AddComponent<Camera>();
+            PerspectiveCamObj = Instantiate(new GameObject("PerspectiveCamera"), FollowCamObjMain.transform);
+            PerspectiveCam = PerspectiveCamObj.AddComponent<Camera>();
+            ReplayPerspectiveCamObj = Instantiate(new GameObject("ReplayPerspectiveCamera"), PerspectiveCamObj.transform);
+            ReplayPerspectiveCam = ReplayPerspectiveCamObj.AddComponent<Camera>();
 
-            setActivateFollowCam(false);
+            SetActiveFollowCam(false);
+            SetActivePerspectiveCam(false);
 
             DontDestroyOnLoad(FollowCamObjMain);
 
             int order = 0;
 
-            Config.Bind(modEnableDef, true, new ConfigDescription("Controls if the mod should be enabled or disabled", null, new ConfigurationManagerAttributes { Order = order }));
-            mEnabled = (ConfigEntry<bool>)Config[modEnableDef];
+            mEnabled = Config.Bind(modEnableDef, true, new ConfigDescription("Controls if the mod should be enabled or disabled", null, new ConfigurationManagerAttributes { Order = order }));
             mEnabled.SettingChanged += onEnableDisable;
             order--;
 
-            Config.Bind(PosAtStartDef, true, new ConfigDescription("Change the position of the camera at the start of a simulation", null, new ConfigurationManagerAttributes { Order = order }));
-            mPosAtStart = (ConfigEntry<bool>)Config[PosAtStartDef];
+            mPosAtStart = Config.Bind(PosAtStartDef, true, new ConfigDescription("Change the position of the camera at the start of a simulation", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(PosAtStopDef, true, new ConfigDescription("Change the position of the camera at the end of a simulation", null, new ConfigurationManagerAttributes { Order = order }));
-            mPosAtStop = (ConfigEntry<bool>)Config[PosAtStopDef];
+            mPosAtStop = Config.Bind(PosAtStopDef, true, new ConfigDescription("Change the position of the camera at the end of a simulation", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(RotateEverywhereDef, false, new ConfigDescription("Controls if you can rotate the camera in build mode", null, new ConfigurationManagerAttributes { Order = order }));
-            mRotateEverywhere = (ConfigEntry<bool>)Config[RotateEverywhereDef];
+            mRotateEverywhere = Config.Bind(RotateEverywhereDef, false, new ConfigDescription("Controls if you can rotate the camera in build mode", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
             mToggleRotate = Config.Bind(ToggleRotateDef, new KeyboardShortcut(KeyCode.None), new ConfigDescription("What button toggles the rotate everywhere setting", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(FollowPosDef, true, new ConfigDescription("Follow the position of the target", null, new ConfigurationManagerAttributes { Order = order }));
-            mFollowPos = (ConfigEntry<bool>)Config[FollowPosDef];
+            mFollowPos = Config.Bind(FollowPosDef, true, new ConfigDescription("Follow the position of the target", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(FollowRotDef, false, new ConfigDescription("Follow the rotation of the target", null, new ConfigurationManagerAttributes { Order = order }));
-            mFollowRot = (ConfigEntry<bool>)Config[FollowRotDef];
+            mFollowRot = Config.Bind(FollowRotDef, false, new ConfigDescription("Follow the rotation of the target", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(BackgroundDef, true, new ConfigDescription("Enable/Disable the gradient background", null, new ConfigurationManagerAttributes { Order = order }));
-            mBackground = (ConfigEntry<bool>)Config[BackgroundDef];
+            mBackground = Config.Bind(BackgroundDef, true, new ConfigDescription("Enable/Disable the gradient background", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(FirstPersonDef, false, new ConfigDescription("A first person view of the target", null, new ConfigurationManagerAttributes { Order = order }));
-            mFirstPerson = (ConfigEntry<bool>)Config[FirstPersonDef];
+            mFirstPerson = Config.Bind(FirstPersonDef, false, new ConfigDescription("A first person view of the target", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(AutoOffsetDef, true, new ConfigDescription("Automaticaly add a offset based on the target vehicle", null, new ConfigurationManagerAttributes { Order = order }));
-            mAutoOffset = (ConfigEntry<bool>)Config[AutoOffsetDef];
+            mAutoOffset = Config.Bind(AutoOffsetDef, true, new ConfigDescription("Automaticaly add a offset based on the target vehicle", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            Config.Bind(OffsetDef, new Vector2(0, 0), new ConfigDescription("A offset thats added to the 0 0 point off the car", null, new ConfigurationManagerAttributes { Order = order }));
-            mOffset = (ConfigEntry<Vector2>)Config[OffsetDef];
+            mOffset = Config.Bind(OffsetDef, new Vector2(0, 0), new ConfigDescription("A offset thats added to the 0 0 point off the car", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
             mChangeTarget = Config.Bind(ChangeTargetDef, new KeyboardShortcut(KeyCode.Tab), new ConfigDescription("What button changes the camera target", null, new ConfigurationManagerAttributes { Order = order }));
+            order--;
+
+            mChangePerspective = Config.Bind(ChangePerspectiveDef, new KeyboardShortcut(KeyCode.None), new ConfigDescription("What button changes the camara projection type", null, new ConfigurationManagerAttributes { Order = order }));
+            order--;
+
+            mFieldOfView = Config.Bind(FieldOfViewDef, 60f, new ConfigDescription("The field of view when using perspective projection type", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
 
@@ -158,8 +167,9 @@ namespace CameraMod
             isCheat = false;
             isEnabled = mEnabled.Value;
 
+            repositoryUrl = "https://github.com/Bram2323/PB-Camera-Mod/";
+
             PolyTechMain.registerMod(this);
-            
         }
 
         public void onEnableDisable(object sender, EventArgs e)
@@ -181,7 +191,8 @@ namespace CameraMod
                 if (cam == null) return;
                 GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
 
-                setActivateFollowCam(false);
+                SetActiveFollowCam(false);
+                SetActivePerspectiveCam(false);
                 backGround.GetComponent<MeshRenderer>().enabled = true;
             }
         }
@@ -189,34 +200,35 @@ namespace CameraMod
         public void onSettingChanged(object sender, EventArgs e)
         {
             isEnabled = mEnabled.Value;
-            backgroundEnabled = mBackground.Value && !mFirstPerson.Value;
             ReCalcCamPos = mFollowPos.Value || mFollowRot.Value || mFirstPerson.Value;
 
-            if (this.isEnabled && GameStateManager.GetState() == GameState.SIM)
+            if (isEnabled && GameStateManager.GetState() == GameState.SIM)
             {
                 onStopSim();
                 onStartSim();
             }
 
+            FollowCam.fieldOfView = mFieldOfView.Value;
+            ReplayFollowCam.fieldOfView = mFieldOfView.Value;
+            PerspectiveCam.fieldOfView = mFieldOfView.Value;
+            ReplayPerspectiveCam.fieldOfView = mFieldOfView.Value;
+
             CameraControl control = CameraControl.instance;
             if (control == null) return;
             Camera cam = control.cam;
             if (cam == null) return;
-            GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
-
-            if (GameStateManager.GetState() != GameState.SIM) backGround.GetComponent<MeshRenderer>().enabled = true;
         }
 
         public override void enableMod()
         {
-            this.isEnabled = true;
+            isEnabled = true;
             mEnabled.Value = true;
             onEnableDisable(null, null);
         }
 
         public override void disableMod()
         {
-            this.isEnabled = false;
+            isEnabled = false;
             mEnabled.Value = false;
             onEnableDisable(null, null);
         }
@@ -241,15 +253,16 @@ namespace CameraMod
         {
             private static void Postfix()
             {
+                //Debug.Log(CameraControl.instance.focusBounds.min + " | " + CameraControl.instance.focusBounds.max + " || " + CameraControl.instance.minAllowedOffsetLength);
+
                 if (!instance.CheckForCheating() || GameStateManager.GetState() != GameState.SIM || !instance.InSim) return;
 
                 CameraControl control = CameraControl.instance;
                 Camera cam = control.cam;
-                GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
 
                 instance.vehicles = Vehicles.m_Vehicles;
 
-                if (!instance.IsPressed && instance.mChangeTarget.Value.IsDown())
+                if (instance.mChangeTarget.Value.IsDown())
                 {
                     instance.CamIndex++;
                     if (instance.CamIndex > instance.vehicles.Count) instance.CamIndex = 0;
@@ -258,22 +271,19 @@ namespace CameraMod
                     if (instance.CamIndex != 0)
                     {
                         target = instance.vehicles[instance.CamIndex - 1];
-                        instance.setActivateFollowCam(instance.mFirstPerson.Value);
-                        backGround.GetComponent<MeshRenderer>().enabled = instance.backgroundEnabled;
+                        instance.SetActiveFollowCam(instance.mFirstPerson.Value);
                     }
                     else
                     {
-                        instance.setActivateFollowCam(false);
-                        backGround.GetComponent<MeshRenderer>().enabled = instance.mBackground.Value;
+                        instance.SetActiveFollowCam(false);
                     }
                     instance.CamTarget = target;
-
-                    if (target != null)
-                    {
-                        instance.ChangeTarget(target);
-                    }
                 }
-                instance.IsPressed = instance.mChangeTarget.Value.IsDown();
+
+                if (instance.CamTarget != null)
+                {
+                    instance.UpdateFollowCam(instance.CamTarget);
+                }
 
                 if (instance.CamIndex > instance.vehicles.Count) instance.CamIndex = 0;
 
@@ -294,7 +304,6 @@ namespace CameraMod
         {
             CameraControl control = CameraControl.instance;
             Camera cam = control.cam;
-            GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
             vehicles = Vehicles.m_Vehicles;
             shapes = CustomShapes.m_Shapes;
 
@@ -302,11 +311,8 @@ namespace CameraMod
             if (CamIndex > vehicles.Count) CamIndex = 0;
             Vehicle target = null;
             if (CamIndex != 0) target = vehicles[CamIndex - 1];
-            if (target != null) ChangeTarget(target);
-
-            backGround.GetComponent<MeshRenderer>().enabled = backgroundEnabled;
-            if (mBackground.Value && mFirstPerson.Value && CamIndex == 0) backGround.GetComponent<MeshRenderer>().enabled = true;
-            if (CamIndex != 0) setActivateFollowCam(mFirstPerson.Value);
+            
+            if (CamIndex != 0) SetActiveFollowCam(false);
 
             InSim = true;
         }
@@ -317,12 +323,10 @@ namespace CameraMod
 
             CameraControl control = CameraControl.instance;
             Camera cam = control.cam;
-            GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
 
             LastCamIndex = CamIndex;
             CamIndex = 0;
-            backGround.GetComponent<MeshRenderer>().enabled = mBackground.Value;
-            setActivateFollowCam(false);
+            SetActiveFollowCam(false);
         }
 
         [HarmonyPatch(typeof(GameStateSim), "StartSimulation")]
@@ -363,12 +367,23 @@ namespace CameraMod
             {
                 if (!instance.CheckForCheating()) return true;
 
-                if (instance.mToggleRotate.Value.IsDown() && !instance.ToggleRotatePressed)
+                if (instance.mChangePerspective.Value.IsDown()) instance.SetActivePerspectiveCam(!instance.PerspectiveCam.enabled);
+
+                Camera cam = null;
+                if (CameraControl.instance && CameraControl.instance.cam) cam = CameraControl.instance.cam;
+                if (cam)
+                {
+                    instance.UpdatePerspectiveCam(CameraControl.instance.cam);
+                    bool backgroundEnabled = instance.mBackground.Value && !instance.FollowCam.enabled && !instance.PerspectiveCam.enabled;
+                    GameObject backGround = cam.gameObject.transform.GetChild(0).gameObject;
+                    backGround.GetComponent<MeshRenderer>().enabled = backgroundEnabled;
+                }
+
+                if (instance.mToggleRotate.Value.IsDown())
                 {
                     instance.mRotateEverywhere.Value = !instance.mRotateEverywhere.Value;
                     GameUI.m_Instance.m_TopBar.m_MessageTopCenter.ShowMessage("Rotate Everywhere " + (instance.mRotateEverywhere.Value ? "enabled" : "disabled"), 2);
                 }
-                instance.ToggleRotatePressed = instance.mToggleRotate.Value.IsDown();
 
                 if (!instance.mRotateEverywhere.Value) return true;
 
@@ -479,38 +494,16 @@ namespace CameraMod
         }
 
 
-        public void setActivateFollowCam(bool Active)
+        public void SetActiveFollowCam(bool active)
         {
-            if (Active)
-            {
-                ReplayFollowCam.enabled = Active;
-                FollowCam.enabled = Active;
-                if (Cameras.m_Instance != null)
-                {
-                    ReplayCam = Cameras.ReplayCamera();
-                    ReplayFollowCam.targetTexture = ReplayCam.targetTexture;
-                    //Cameras.m_Instance.m_Replay = ReplayFollowCam;
-                }
-            }
-            else
-            {
-                FollowCam.transform.SetParent(FollowCamObjMain.transform, false);
-                if (Cameras.m_Instance != null)
-                {
-                    //Cameras.m_Instance.m_Replay = ReplayCam;
-                    //ReplayFollowCam.targetTexture = null;
-                }
-                ReplayFollowCam.enabled = Active;
-                FollowCam.enabled = Active;
-            }
+            if (Cameras.m_Instance != null) ReplayFollowCam.targetTexture = Cameras.ReplayCamera().targetTexture;
+
+            ReplayFollowCam.enabled = active;
+            FollowCam.enabled = active;
         }
-
-
-
-        public void ChangeTarget(Vehicle target)
+        
+        public void UpdateFollowCam(Vehicle target)
         {
-            FollowCam.transform.SetParent(target.m_MeshRenderer.transform, false);
-
             Vector3 Rot = target.m_MeshRenderer.transform.eulerAngles;
 
             Vector2 VehicleOffset = GetOffset(target);
@@ -531,7 +524,22 @@ namespace CameraMod
             FollowCam.transform.position = target.m_MeshRenderer.transform.position + new Vector3(Offset.x, Offset.y, 0);
         }
 
+        public void SetActivePerspectiveCam(bool active)
+        {
+            if (Cameras.m_Instance != null) ReplayPerspectiveCam.targetTexture = Cameras.ReplayCamera().targetTexture;
 
+            ReplayPerspectiveCam.enabled = active;
+            PerspectiveCam.enabled = active;
+        }
+
+        public void UpdatePerspectiveCam(Camera cam)
+        {
+            PerspectiveCamObj.transform.rotation = cam.transform.rotation;
+
+            float size = cam.orthographicSize * 3;
+
+            PerspectiveCamObj.transform.position = cam.transform.position + cam.transform.forward * (200 - size);
+        }
 
         /*
         public void SetSkyboxColor(Color bottom, Color top)
@@ -593,9 +601,7 @@ namespace CameraMod
             }
         }
         */
-
-
-
+        
         public Vector2 GetOffset(Vehicle vehicle)
         {
             if (vehicle.m_DisplayNameLocKey == "VEHICLE_TRUCK_WITH_CONTAINER" || vehicle.m_DisplayNameLocKey == "VEHICLE_TRUCK_WITH_LIQUID" || vehicle.m_DisplayNameLocKey == "VEHICLE_TRUCK" || vehicle.m_DisplayNameLocKey == "VEHICLE_TRUCK_WITH_FLATBED") return new Vector2(0.75f, 1.25f);
