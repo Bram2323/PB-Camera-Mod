@@ -1,5 +1,9 @@
 # Changelog:
 
+1.2.2
+- Added setting "Background Color": The background color that gets used when the gradient background is disabled
+- Fixed bug where the firstperson camera would not activate at the begining of the simulation
+
 1.2.1
 - The game will now tell you when there is an update
 - Added setting "Change Projection": When the keybind is pressed the projection type will switch between perspective and orthographic

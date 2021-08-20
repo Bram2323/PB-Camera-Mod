@@ -21,7 +21,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.2.1";
+        public const string pluginVerson = "1.2.2";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
@@ -31,6 +31,7 @@ namespace CameraMod
         public ConfigDefinition FollowPosDef = new ConfigDefinition(pluginName, "Follow Position");
         public ConfigDefinition FollowRotDef = new ConfigDefinition(pluginName, "Follow Rotation");
         public ConfigDefinition BackgroundDef = new ConfigDefinition(pluginName, "Background");
+        public ConfigDefinition BackgroundColorDef = new ConfigDefinition(pluginName, "Background Color");
         public ConfigDefinition FirstPersonDef = new ConfigDefinition(pluginName, "First Person");
         public ConfigDefinition AutoOffsetDef = new ConfigDefinition(pluginName, "Auto Offset");
         public ConfigDefinition OffsetDef = new ConfigDefinition(pluginName, "Offset");
@@ -51,6 +52,7 @@ namespace CameraMod
         public ConfigEntry<bool> mFollowRot;
 
         public ConfigEntry<bool> mBackground;
+        public ConfigEntry<string> mBackgroundColor;
 
         public ConfigEntry<bool> mFirstPerson;
 
@@ -137,6 +139,9 @@ namespace CameraMod
             order--;
 
             mBackground = Config.Bind(BackgroundDef, true, new ConfigDescription("Enable/Disable the gradient background", null, new ConfigurationManagerAttributes { Order = order }));
+            order--;
+
+            mBackgroundColor = Config.Bind(BackgroundColorDef, "", new ConfigDescription("The background color when the gradient background is disabled", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
             mFirstPerson = Config.Bind(FirstPersonDef, false, new ConfigDescription("A first person view of the target", null, new ConfigurationManagerAttributes { Order = order }));
@@ -247,55 +252,57 @@ namespace CameraMod
         {
             return mEnabled.Value && PolyTechMain.modEnabled.Value;
         }
-
-        [HarmonyPatch(typeof(Main), "Update")]
-        private static class patchUpdate
+        
+        void Update()
         {
-            private static void Postfix()
+            if (!CheckForCheating() || GameStateManager.GetState() != GameState.SIM || !InSim) return;
+
+            CameraControl control = CameraControl.instance;
+            Camera cam = control.cam;
+
+            Color backgroundColor;
+            if (ColorUtility.TryParseHtmlString(mBackgroundColor.Value, out backgroundColor))
             {
-                //Debug.Log(CameraControl.instance.focusBounds.min + " | " + CameraControl.instance.focusBounds.max + " || " + CameraControl.instance.minAllowedOffsetLength);
+                cam.backgroundColor = backgroundColor;
+                Cameras.ReplayCamera().backgroundColor = backgroundColor;
+            }
 
-                if (!instance.CheckForCheating() || GameStateManager.GetState() != GameState.SIM || !instance.InSim) return;
 
-                CameraControl control = CameraControl.instance;
-                Camera cam = control.cam;
+            vehicles = Vehicles.m_Vehicles;
 
-                instance.vehicles = Vehicles.m_Vehicles;
-
-                if (instance.mChangeTarget.Value.IsDown())
-                {
-                    instance.CamIndex++;
-                    if (instance.CamIndex > instance.vehicles.Count) instance.CamIndex = 0;
+            if (mChangeTarget.Value.IsDown())
+            {
+                CamIndex++;
+                if (CamIndex > vehicles.Count) CamIndex = 0;
                     
-                    Vehicle target = null;
-                    if (instance.CamIndex != 0)
-                    {
-                        target = instance.vehicles[instance.CamIndex - 1];
-                        instance.SetActiveFollowCam(instance.mFirstPerson.Value);
-                    }
-                    else
-                    {
-                        instance.SetActiveFollowCam(false);
-                    }
-                    instance.CamTarget = target;
-                }
-
-                if (instance.CamTarget != null)
+                Vehicle target = null;
+                if (CamIndex != 0)
                 {
-                    instance.UpdateFollowCam(instance.CamTarget);
+                    target = vehicles[CamIndex - 1];
+                    SetActiveFollowCam(mFirstPerson.Value);
                 }
-
-                if (instance.CamIndex > instance.vehicles.Count) instance.CamIndex = 0;
-
-                if (instance.ReCalcCamPos) control.RotMouse(Vec2.zero);
-
-                if (instance.CamTarget != null)
+                else
                 {
-                    if (instance.mFollowRot.Value)
-                    {
-                        cam.transform.eulerAngles = new Vector3(0, 0, instance.CamTarget.m_MeshRenderer.transform.eulerAngles.z);
-                        cam.transform.position = new Vector3(instance.CamTarget.m_MeshRenderer.transform.position.x, instance.CamTarget.m_MeshRenderer.transform.position.y, -20);
-                    }
+                    SetActiveFollowCam(false);
+                }
+                CamTarget = target;
+            }
+
+            if (CamTarget != null)
+            {
+                UpdateFollowCam(CamTarget);
+            }
+
+            if (CamIndex > vehicles.Count) CamIndex = 0;
+
+            if (ReCalcCamPos) control.RotMouse(Vec2.zero);
+
+            if (CamTarget != null)
+            {
+                if (mFollowRot.Value)
+                {
+                    cam.transform.eulerAngles = new Vector3(0, 0, CamTarget.m_MeshRenderer.transform.eulerAngles.z);
+                    cam.transform.position = new Vector3(CamTarget.m_MeshRenderer.transform.position.x, CamTarget.m_MeshRenderer.transform.position.y, -20);
                 }
             }
         }
@@ -309,10 +316,12 @@ namespace CameraMod
 
             CamIndex = LastCamIndex;
             if (CamIndex > vehicles.Count) CamIndex = 0;
-            Vehicle target = null;
-            if (CamIndex != 0) target = vehicles[CamIndex - 1];
-            
-            if (CamIndex != 0) SetActiveFollowCam(false);
+            CamTarget = null;
+            if (CamIndex != 0)
+            {
+                CamTarget = vehicles[CamIndex - 1];
+                SetActiveFollowCam(true);
+            }
 
             InSim = true;
         }

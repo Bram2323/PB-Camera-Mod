@@ -23,7 +23,10 @@ Toggle Rotate Everywhere : The key that will toggle the rotate everywhere settin
 Follow Position: The camera will follow the target's position
 
 Follow Rotation: The camera will follow the target's rotation
-Background: Enables/Disables the gradient sky
+
+Background: Enables/Disables the gradient background
+
+Background Color: The color that gets used as the background when the gradient background is disabled
 
 First Person: Will give a first person perspective of the target
 
