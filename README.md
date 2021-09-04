@@ -74,7 +74,7 @@ Change Projection: The button that changes the camara projection type
 
 Field of View: The vield of view when using perspective projection type
 
-#How to add custom levels for the main menu:
+# How to add custom levels for the main menu:
 - Run the game once to let the mod generate some folders
 - Make a level in sandbox and save it
 - Go to '...\Documents\Dry Cactus\Poly Bridge 2\Sandbox' and copy the .layout file with the name of your level
@@ -82,7 +82,7 @@ Field of View: The vield of view when using perspective projection type
 - Run the game and enable "Custom Main Menu" in the settings to make it load your levels (if you have "Main Menu World" set to default it will pick randomly between the worlds with custom layouts)
 - The game will run the levels in alphabetical order!
 
-#How to add custom camera angles for custom main menu levels
+# How to add custom camera angles for custom main menu levels
 - Go to '...\Poly Bridge 2\BepInEx\plugins\CameraMod\Custom Menu Layouts\<World Name>' and make a .txt file with the same name as the .layout file
 - Use this format to add the custom camera angles in the .txt file: 
 " 
@@ -91,3 +91,5 @@ Field of View: The vield of view when using perspective projection type
 	<Size>
 "
 - You can get these values by loading the level in sandbox and when the camera angles are right reset the settings "Camera Position", "Camera Rotation" and "Camera Size", those are the values you have to copy
+	
+You can always ask for help in '#pb2-mods' in the 'Poly Bridge' discord or in '#modding-help' in the 'PolyTech' discord!
