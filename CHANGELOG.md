@@ -1,5 +1,9 @@
 # Changelog:
 
+1.3.1
+- Renamed setting "Always Grid" to "Grid Everywhere": It will now let you enable/disable the grid everywhere instead of it always being activated
+- The point of view buttons now still work if one of the Change Position/Rotation/Size At Start/Stop is disabled
+
 1.3.0
 - Changed setting "Change Position At Start": This will now only control if the pivot will change at the start of the simulation
 - Added setting "Change Rotation At Start": Controls if the rotation of the camera will change at the start of the simulation

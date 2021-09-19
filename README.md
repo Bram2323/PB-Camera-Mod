@@ -34,7 +34,7 @@ Rotation Boundaries: Enable/Disable rotation boundaries for the camera
 
 Recenter Button: Enable/Disable the recenter button
 
-Always Grid: Controls if the grid should always be displayed
+Gird Everywhere: Controls if you can enable/disable the grid everywhere
 
 Visualize Pivot: Controls if there will be a sphere displayed at the pivot point of the camera
 

@@ -23,7 +23,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.3.0";
+        public const string pluginVerson = "1.3.1";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
@@ -37,7 +37,7 @@ namespace CameraMod
         public ConfigDefinition CamPosBoundsDef = new ConfigDefinition(pluginName, "Position Boundaries");
         public ConfigDefinition CamRotBoundsDef = new ConfigDefinition(pluginName, "Rotation Boundaries");
         public ConfigDefinition RecenterDef = new ConfigDefinition(pluginName, "Recenter Button");
-        public ConfigDefinition GridDef = new ConfigDefinition(pluginName, "Always Grid");
+        public ConfigDefinition GridDef = new ConfigDefinition(pluginName, "Grid Everywhere");
         public ConfigDefinition PivotDef = new ConfigDefinition(pluginName, "Visualize Pivot");
         public ConfigDefinition CamPosDef = new ConfigDefinition(pluginName, "Camera Position");
         public ConfigDefinition CamRotDef = new ConfigDefinition(pluginName, "Camera Rotation");
@@ -67,7 +67,9 @@ namespace CameraMod
         public ConfigEntry<bool> mPosAtStop;
         public ConfigEntry<bool> mRotAtStop;
         public ConfigEntry<bool> mSizeAtStop;
+
         public Vector3 cashedPivot = Vector3.zero;
+        public bool allowRotate = false;
 
         public ConfigEntry<bool> mRotateEverywhere;
         public ConfigEntry<KeyboardShortcut> mToggleRotate;
@@ -211,7 +213,7 @@ namespace CameraMod
             mRecenter = Config.Bind(RecenterDef, true, new ConfigDescription("Enable/Disable the recenter button", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
-            mGrid = Config.Bind(GridDef, false, new ConfigDescription("Controls if the grid should always be displayed", null, new ConfigurationManagerAttributes { Order = order }));
+            mGrid = Config.Bind(GridDef, false, new ConfigDescription("Controls if you can enable/disable the grid everywhere", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
             mPivot = Config.Bind(PivotDef, false, new ConfigDescription("Controls if there will be a sphere displayed at the pivot point of the camera", null, new ConfigurationManagerAttributes { Order = order }));
@@ -448,9 +450,19 @@ namespace CameraMod
 
             UpdateThemeSettings();
 
-            PivotObj.transform.position = PointsOfView.m_Pivot;
+            if (mGrid.Value && (GameStateManager.GetState() != GameState.BUILD) && GameInput.JustPressed(BindingType.GRID))
+            {
+                if (Profile.m_GridEnabled)
+                {
+                    GameUI.m_Instance.m_TopBar.OnGridSelected();
+                }
+                else
+                {
+                    GameUI.m_Instance.m_TopBar.OnGrid();
+                }
+            }
 
-            if (mGrid.Value && !GameUI.m_Grid.activeInHierarchy) GameUI.m_Grid.SetActive(true);
+            PivotObj.transform.position = PointsOfView.m_Pivot;
 
             if (!mRecenter.Value && GameUI.m_Instance.m_Recenter.gameObject.activeInHierarchy) GameUI.m_Instance.m_Recenter.gameObject.SetActive(false);
 
@@ -849,6 +861,18 @@ namespace CameraMod
                 if (!instance.CheckForCheating()) return;
                 if (prevState == GameState.SIM && newState != GameState.SIM) instance.onStopSim();
             }
+
+            private static void Postfix()
+            {
+                if (!instance.CheckForCheating()) return;
+
+                if (instance.mGrid.Value)
+                {
+                    GameUI.m_Instance.m_TopBar.m_GridButton.interactable = true;
+                    GameUI.m_Instance.m_TopBar.m_GridSelectedButton.interactable = true;
+                    GameUI.m_Grid.SetActive(Profile.m_GridEnabled);
+                }
+            }
         }
 
         [HarmonyPatch(typeof(CameraControl), "RecalcCamPosition")]
@@ -1019,11 +1043,44 @@ namespace CameraMod
             }
         }
 
+        [HarmonyPatch(typeof(Panel_PointOfView), "OnCenterView")]
+        private static class patchCenterView
+        {
+            private static void Prefix()
+            {
+                instance.allowRotate = true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Panel_PointOfView), "OnLeftView")]
+        private static class patchLeftView
+        {
+            private static void Prefix()
+            {
+                instance.allowRotate = true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Panel_PointOfView), "OnRightView")]
+        private static class patchRightView
+        {
+            private static void Prefix()
+            {
+                instance.allowRotate = true;
+            }
+        }
+
         [HarmonyPatch(typeof(PointsOfView), "RotateTo")]
         private static class patchCameraInterpolate
         {
             private static bool Prefix(PointOfViewType type)
             {
+                if (instance.allowRotate)
+                {
+                    instance.allowRotate = false;
+                    return true;
+                }
+
                 if (!instance.CheckForCheating() || type == PointOfViewType.BUILD || GameStateManager.GetState() == GameState.MAIN_MENU) return true;
 
                 bool changePos, changeRot, changeSize;
