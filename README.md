@@ -86,12 +86,12 @@ Field of View: The vield of view when using perspective projection type
 
 # How to add custom camera angles for custom main menu levels
 - Go to '...\Poly Bridge 2\BepInEx\plugins\CameraMod\Custom Menu Layouts\<World Name>' and make a .txt file with the same name as the .layout file
-- Use this format to add the custom camera angles in the .txt file: 
-" 
-	<Position.x>, <Position.y>, <Position.z>,
-	<Rotation.x>, <Rotation.y>, <Rotation.z>,
-	<Size>
-"
+- Use this format to add the custom camera angles in the .txt file:
+~~~text
+<Position.x> <Position.y> <Position.z>
+<Rotation.x> <Rotation.y> <Rotation.z>
+<Size>
+~~~
 - You can get these values by loading the level in sandbox and when the camera angles are right reset the settings "Camera Position", "Camera Rotation" and "Camera Size", those are the values you have to copy
 	
 You can always ask for help in '#pb2-mods' in the 'Poly Bridge' discord or in '#modding-help' in the 'PolyTech' discord!
