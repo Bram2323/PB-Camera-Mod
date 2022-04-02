@@ -44,6 +44,8 @@ Camera Rotation: Set the rotation of the camera (Reset to get the rotation of th
 
 Camera Size: Set the size of the camera (Reset to get the size of the camera)
 
+Set Camera Position: Sets the camera position, rotation and size based on the above settings
+
 Follow Position: The camera will follow the target's position
 
 Follow Rotation: The camera will follow the target's rotation

@@ -1,5 +1,8 @@
 # Changelog:
 
+1.3.2
+- Added setting "Set Camera Position": The key that will set the camera position, rotation and size based on the "Camera Position/Rotation/Size" settings
+
 1.3.1
 - Renamed setting "Always Grid" to "Grid Everywhere": It will now let you enable/disable the grid everywhere instead of it always being activated
 - The point of view buttons now still work if one of the Change Position/Rotation/Size At Start/Stop is disabled

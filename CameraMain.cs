@@ -23,7 +23,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.3.1";
+        public const string pluginVerson = "1.3.2";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
@@ -42,6 +42,7 @@ namespace CameraMod
         public ConfigDefinition CamPosDef = new ConfigDefinition(pluginName, "Camera Position");
         public ConfigDefinition CamRotDef = new ConfigDefinition(pluginName, "Camera Rotation");
         public ConfigDefinition CamSizeDef = new ConfigDefinition(pluginName, "Camera Size");
+        public ConfigDefinition SetCamPosDef = new ConfigDefinition(pluginName, "Set Camera Position");
         public ConfigDefinition FollowPosDef = new ConfigDefinition(pluginName, "Follow Position");
         public ConfigDefinition FollowRotDef = new ConfigDefinition(pluginName, "Follow Rotation");
         public ConfigDefinition BackgroundDef = new ConfigDefinition(pluginName, "Background");
@@ -86,6 +87,8 @@ namespace CameraMod
         public ConfigEntry<Vector3> mCamPos;
         public ConfigEntry<Vector3> mCamRot;
         public ConfigEntry<float> mCamSize;
+
+        public ConfigEntry<KeyboardShortcut> mSetCamPos;
 
         public ConfigEntry<bool> mFollowPos;
         public ConfigEntry<bool> mFollowRot;
@@ -229,6 +232,9 @@ namespace CameraMod
 
             mCamSize = Config.Bind(CamSizeDef, -23232323f, new ConfigDescription("Set the size of the camera (Reset to get the size of the camera)", null, new ConfigurationManagerAttributes { Order = order }));
             mCamSize.SettingChanged += onSizeChanged;
+            order--;
+
+            mSetCamPos = Config.Bind(SetCamPosDef, new KeyboardShortcut(KeyCode.None), new ConfigDescription("Sets the camera position, rotation and size based on the above settings", null, new ConfigurationManagerAttributes { Order = order }));
             order--;
 
             mFollowPos = Config.Bind(FollowPosDef, true, new ConfigDescription("Follow the position of the target", null, new ConfigurationManagerAttributes { Order = order }));
@@ -449,6 +455,13 @@ namespace CameraMod
             if (!CheckForCheating()) return;
 
             UpdateThemeSettings();
+
+            if (mSetCamPos.Value.IsDown())
+            {
+                onPositionChanged(null, null);
+                onRotationChanged(null, null);
+                onSizeChanged(null, null);
+            }
 
             if (mGrid.Value && (GameStateManager.GetState() != GameState.BUILD) && GameInput.JustPressed(BindingType.GRID))
             {
@@ -706,7 +719,7 @@ namespace CameraMod
                         if (File.Exists(cameraPath))
                         {
                             string data = File.ReadAllText(cameraPath);
-                            string[] numStrings = data.Split(new char[] { ' ', '/', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            string[] numStrings = data.Split(new char[] { ' ', '\"', ',', '/', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                             if (numStrings.Length == 7)
                             {
