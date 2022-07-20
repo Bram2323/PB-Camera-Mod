@@ -23,7 +23,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.3.2";
+        public const string pluginVerson = "1.3.3";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
