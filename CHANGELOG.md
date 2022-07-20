@@ -1,5 +1,8 @@
 # Changelog:
 
+1.3.3
+- The mod is now fixed for game version 1.30
+
 1.3.2
 - Added setting "Set Camera Position": The key that will set the camera position, rotation and size based on the "Camera Position/Rotation/Size" settings
 
