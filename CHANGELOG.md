@@ -1,5 +1,9 @@
 # Changelog:
 
+1.3.4
+- Added "Glittering Gorge" and "Gleamtown" to the "Main Menu World" setting
+- Fixed a bug where custom main menu levels would break the game
+
 1.3.3
 - The mod is now fixed for game version 1.30
 

@@ -23,7 +23,7 @@ namespace CameraMod
 
         public const string pluginName = "Camera Mod";
 
-        public const string pluginVerson = "1.3.3";
+        public const string pluginVerson = "1.3.4";
 
         public ConfigDefinition modEnableDef = new ConfigDefinition(pluginName, "Enable/Disable Mod");
         public ConfigDefinition PosAtStartDef = new ConfigDefinition(pluginName, "Change Position At Start");
@@ -306,7 +306,9 @@ namespace CameraMod
                     "TranquilOasis",
                     "SanguineGulch",
                     "SerenityValley",
-                    "Steamtown" 
+                    "Steamtown",
+                    "GlitteringGorge",
+                    "Gleamtown"
                 };
 
                 foreach (string name in themes)
@@ -593,7 +595,12 @@ namespace CameraMod
 
                     return;
                 }
-                
+
+                foreach (CampaignWorld world1 in CampaignWorlds.m_Instance.m_Worlds)
+                {
+                    Debug.Log(world1.m_ThemeStub.m_ThemeName);
+                }
+
                 __result = CampaignWorlds.m_Instance.m_Worlds[(int)instance.mMainMenuWorld.Value - 1];
             }
         }
@@ -796,6 +803,12 @@ namespace CameraMod
                 case "Steampunk":
                     folderName = "Steamtown";
                     break;
+                case "Volcano2":
+                    folderName = "GlitteringGorge";
+                    break;
+                case "Steampunk2":
+                    folderName = "Gleamtown";
+                    break;
                 default:
                     Debug.Log("Unkown theme name: " + themeName);
                     return new string[0];
@@ -820,7 +833,7 @@ namespace CameraMod
 
             Sandbox.Clear();
             Sandbox.Load(themeName, sandboxLayoutData, true);
-            PointsOfView.OnLayoutLoaded();
+            PointsOfView.OnLayoutLoaded("custom");
             Sandbox.m_CurrentLayoutName = "MainMenu_Custom";
             if (Profile.m_LastMainMenuThemeName != themeName)
             {
@@ -1414,6 +1427,10 @@ namespace CameraMod
         SerenityValley,
         [Description("Steamtown")]
         Steamtown,
+        [Description("Glittering Gorge")]
+        GlitteringGorge,
+        [Description("Gleamtown")]
+        GleamTown,
     }
 
     public enum Themes
